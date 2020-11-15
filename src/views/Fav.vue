@@ -4,51 +4,53 @@
       <h1 class="t" v-if="!isLog">
         veuillez vous connectez pour voir le contenu
       </h1>
-      <card
-        v-else
-        v-for="(item, index) in data"
+      <h1 class="t" v-else>Favoris de : {{ username }}</h1>
+      <cardFav
+        v-for="(item, index) in favoris"
         :key="index"
         :id="item.id"
         :title="item.title"
+        :img_fav="item.cover"
+        :img_type="item.type"
         :img_src="item.image.link"
-        :condition="item.image.type === 'video/mp4'"
-      ></card>
+      ></cardFav>
     </div>
   </div>
 </template>
 
 <script>
-import card from "@/components/Card.vue";
+import cardFav from "@/components/CardFav.vue";
 import axios from "axios";
 export default {
-  name: "Home",
-  components: { card },
+  name: "Fav",
+  components: { cardFav },
   data() {
     return {
-      data: [],
+      favoris: [],
+      username: localStorage.getItem("username"),
     };
   },
-
   methods: {
     call() {
       var config = {
         method: "get",
-        url:
-          "https://api.imgur.com/3/gallery/hot/viral/?showViral=true&mature=false",
+        url: `https://api.imgur.com/3/account/${localStorage.getItem(
+          "username"
+        )}/favorites/`,
         headers: {
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
       };
       axios(config)
         .then((response) => {
-          response.data.data.forEach((item) => {
-            //for each de chaque item pour trier si il y une image ou non
+          this.favoris = response.data.data;
+          //for each de chaque item pour trier si il y une image ou non
+          this.favoris.forEach((item) => {
             if (item.images) {
               item.image = item.images[0];
             } else {
               item.image = { link: item.link, type: item.type };
             }
-            this.data.push(item);
           });
         })
         .catch(function(error) {
@@ -64,6 +66,7 @@ export default {
   },
   mounted() {
     if (this.$checkStore) {
+      // execution de la requete axios
       this.call();
     }
   },
